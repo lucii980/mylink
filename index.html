@@ -59,6 +59,10 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+      .dropzone-active {
+        border-color: #7c3aed !important;
+        background-color: #f5f3ff !important;
+      }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-900 antialiased">
@@ -151,17 +155,87 @@
               ></textarea>
             </div>
 
-            <!-- Profile Pic -->
+            <!-- Profile Pic Upload -->
             <div>
               <label class="block text-sm font-semibold text-slate-700 mb-1.5"
-                >Profile Picture URL</label
+                >Profile Picture</label
               >
-              <input
-                id="inpPic"
-                type="url"
-                placeholder="https://example.com/avatar.jpg"
-                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition text-sm"
-              />
+
+              <div
+                id="dropzone"
+                class="relative border-2 border-dashed border-slate-300 rounded-xl px-4 py-5 flex items-center gap-4 cursor-pointer hover:border-violet-400 hover:bg-violet-50/40 transition-colors"
+              >
+                <input
+                  id="inpFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                />
+
+                <div id="dzPreviewWrap" class="hidden shrink-0">
+                  <img
+                    id="dzPreviewImg"
+                    src=""
+                    alt="preview"
+                    class="w-14 h-14 rounded-full object-cover border-2 border-white shadow"
+                  />
+                </div>
+                <div
+                  id="dzIconWrap"
+                  class="shrink-0 w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-6 h-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <p
+                    id="dzMainText"
+                    class="text-sm font-semibold text-slate-700"
+                  >
+                    Drag & drop an image, or
+                    <span class="text-violet-600 underline underline-offset-2"
+                      >browse</span
+                    >
+                  </p>
+                  <p id="dzSubText" class="text-xs text-slate-400 mt-0.5">
+                    JPG, PNG or WebP · saved locally in your browser
+                  </p>
+                </div>
+
+                <button
+                  id="btnRemovePic"
+                  type="button"
+                  title="Remove image"
+                  class="hidden shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p id="picStatus" class="text-xs mt-1.5 h-4"></p>
             </div>
 
             <hr class="border-slate-100" />
@@ -251,7 +325,8 @@
             Generate My Link
           </button>
           <p class="text-center text-xs text-slate-400 mt-3">
-            No sign up. No servers. Your link contains your data.
+            No sign up. No servers. Text lives in the link; your photo stays in
+            this browser.
           </p>
         </section>
 
@@ -277,12 +352,29 @@
                   <div
                     class="pt-14 pb-10 px-6 flex flex-col items-center text-center"
                   >
-                    <img
-                      id="prevPic"
-                      src="https://api.dicebear.com/7.x/thumbs/svg?seed=guest"
-                      alt="avatar"
-                      class="w-24 h-24 rounded-full object-cover border-4 border-white/70 shadow-xl bg-white/20"
-                    />
+                    <div
+                      id="prevPicWrap"
+                      class="w-24 h-24 rounded-full border-4 border-white/70 shadow-xl bg-white/20 flex items-center justify-center overflow-hidden"
+                    >
+                      <img
+                        id="prevPic"
+                        src=""
+                        alt="avatar"
+                        class="hidden w-full h-full object-cover"
+                      />
+                      <svg
+                        id="prevPicDefault"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-12 h-12 text-white/90"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"
+                        />
+                      </svg>
+                    </div>
+
                     <h3
                       id="prevName"
                       class="mt-4 text-xl font-extrabold text-white drop-shadow-sm"
@@ -330,12 +422,29 @@
       <div
         class="w-full max-w-md mx-auto px-6 py-16 flex flex-col items-center text-center"
       >
-        <img
-          id="viewPic"
-          src=""
-          alt="avatar"
-          class="w-28 h-28 rounded-full object-cover border-4 border-white/70 shadow-2xl bg-white/20"
-        />
+        <div
+          id="viewPicWrap"
+          class="w-28 h-28 rounded-full border-4 border-white/70 shadow-2xl bg-white/20 flex items-center justify-center overflow-hidden"
+        >
+          <img
+            id="viewPic"
+            src=""
+            alt="avatar"
+            class="hidden w-full h-full object-cover"
+          />
+          <svg
+            id="viewPicDefault"
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-14 h-14 text-white/90"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"
+            />
+          </svg>
+        </div>
+
         <h1
           id="viewName"
           class="mt-5 text-2xl font-extrabold text-white drop-shadow-sm"
@@ -384,8 +493,8 @@
           </button>
         </div>
         <p class="text-sm text-slate-500 mb-4">
-          Copy this link and share it anywhere. All your data lives inside the
-          URL itself — nothing is stored on any server.
+          Copy this link and share it anywhere. Your name, bio, links and theme
+          travel inside the URL.
         </p>
         <div
           class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2"
@@ -402,6 +511,35 @@
           >
             Copy
           </button>
+        </div>
+        <p id="linkLengthNote" class="text-[11px] text-slate-400 mt-2"></p>
+        <div
+          id="picWarningBox"
+          class="hidden mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+            />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+          </svg>
+          <p class="text-xs text-amber-700 leading-snug">
+            Your profile photo is saved
+            <strong>only in this browser</strong> (not in the link). Anyone who
+            opens this link on a
+            <strong>different device or browser</strong> will see a default
+            avatar instead of your photo.
+          </p>
         </div>
         <p
           id="copyFeedback"
@@ -422,6 +560,10 @@
 
     <script>
       (function () {
+        // ---------- localStorage keys ----------
+        const LS_CURRENT_PIC_KEY = "linkfolio_current_pic"; // used for live editor preview persistence
+        const LS_PIC_PREFIX = "linkfolio_pic_"; // + picId, used per generated link
+
         // ---------- Theme definitions ----------
         const themes = [
           {
@@ -489,10 +631,10 @@
         // ---------- Elements ----------
         const inpName = document.getElementById("inpName");
         const inpBio = document.getElementById("inpBio");
-        const inpPic = document.getElementById("inpPic");
 
         const previewBg = document.getElementById("previewBg");
         const prevPic = document.getElementById("prevPic");
+        const prevPicDefault = document.getElementById("prevPicDefault");
         const prevName = document.getElementById("prevName");
         const prevBio = document.getElementById("prevBio");
         const prevLinks = document.getElementById("prevLinks");
@@ -502,8 +644,192 @@
         const linkCountBadge = document.getElementById("linkCountBadge");
         const btnAddLink = document.getElementById("btnAddLink");
 
+        // ---------- Image upload state ----------
+        const dropzone = document.getElementById("dropzone");
+        const inpFile = document.getElementById("inpFile");
+        const dzPreviewWrap = document.getElementById("dzPreviewWrap");
+        const dzPreviewImg = document.getElementById("dzPreviewImg");
+        const dzIconWrap = document.getElementById("dzIconWrap");
+        const dzMainText = document.getElementById("dzMainText");
+        const dzSubText = document.getElementById("dzSubText");
+        const btnRemovePic = document.getElementById("btnRemovePic");
+        const picStatus = document.getElementById("picStatus");
+
+        let profilePicBase64 = ""; // pure base64 (no "data:image/jpeg;base64," prefix)
+        const MAX_ORIGINAL_FILE_MB = 10;
+        const TARGET_MAX_DIMENSION = 320; // px
+        const JPEG_QUALITY = 0.75;
+
+        function safeLSGet(key) {
+          try {
+            return localStorage.getItem(key);
+          } catch (e) {
+            return null;
+          }
+        }
+        function safeLSSet(key, value) {
+          try {
+            localStorage.setItem(key, value);
+            return true;
+          } catch (e) {
+            console.warn("localStorage write failed", e);
+            return false;
+          }
+        }
+        function safeLSRemove(key) {
+          try {
+            localStorage.removeItem(key);
+          } catch (e) {
+            /* noop */
+          }
+        }
+
+        function setStatus(msg, isError) {
+          picStatus.textContent = msg || "";
+          picStatus.className = `text-xs mt-1.5 h-4 ${isError ? "text-red-500" : "text-emerald-600"}`;
+        }
+
+        function resetDropzoneUI() {
+          dzPreviewWrap.classList.add("hidden");
+          dzIconWrap.classList.remove("hidden");
+          btnRemovePic.classList.add("hidden");
+          dzMainText.innerHTML =
+            'Drag & drop an image, or <span class="text-violet-600 underline underline-offset-2">browse</span>';
+          dzSubText.textContent =
+            "JPG, PNG or WebP · saved locally in your browser";
+        }
+
+        function showDropzonePreview(dataUrl, fileSizeKb) {
+          dzPreviewImg.src = dataUrl;
+          dzPreviewWrap.classList.remove("hidden");
+          dzIconWrap.classList.add("hidden");
+          btnRemovePic.classList.remove("hidden");
+          dzMainText.textContent = "Image ready ✓";
+          dzSubText.textContent = `~${fileSizeKb} KB · stored locally in this browser`;
+        }
+
+        // Resize + compress an image file to a small base64 JPEG using canvas
+        function compressImageFile(file) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error("Could not read file"));
+            reader.onload = (e) => {
+              const img = new Image();
+              img.onerror = () => reject(new Error("Invalid image file"));
+              img.onload = () => {
+                let { width, height } = img;
+                if (width > height && width > TARGET_MAX_DIMENSION) {
+                  height = Math.round(height * (TARGET_MAX_DIMENSION / width));
+                  width = TARGET_MAX_DIMENSION;
+                } else if (height >= width && height > TARGET_MAX_DIMENSION) {
+                  width = Math.round(width * (TARGET_MAX_DIMENSION / height));
+                  height = TARGET_MAX_DIMENSION;
+                }
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+                resolve(dataUrl);
+              };
+              img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+
+        async function handleFile(file) {
+          if (!file) return;
+          if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+            setStatus("Please upload a JPG, PNG, or WebP image.", true);
+            return;
+          }
+          if (file.size > MAX_ORIGINAL_FILE_MB * 1024 * 1024) {
+            setStatus(
+              `File too large — please pick something under ${MAX_ORIGINAL_FILE_MB}MB.`,
+              true,
+            );
+            return;
+          }
+
+          setStatus("Compressing image…", false);
+          try {
+            const dataUrl = await compressImageFile(file);
+            const base64Only = dataUrl.split(",")[1] || "";
+            profilePicBase64 = base64Only;
+
+            const approxKb = Math.round((base64Only.length * 0.75) / 1024);
+            showDropzonePreview(dataUrl, approxKb);
+
+            // Persist to localStorage so the editor's own preview survives a refresh
+            const saved = safeLSSet(LS_CURRENT_PIC_KEY, base64Only);
+            setStatus(
+              saved
+                ? `Ready! (${approxKb} KB, saved to this browser)`
+                : `Ready! (${approxKb} KB) — could not save locally`,
+              !saved,
+            );
+
+            updatePreview();
+          } catch (err) {
+            console.error(err);
+            setStatus("Something went wrong processing that image.", true);
+          }
+        }
+
+        dropzone.addEventListener("click", (e) => {
+          if (e.target === btnRemovePic || btnRemovePic.contains(e.target))
+            return;
+          inpFile.click();
+        });
+        inpFile.addEventListener("change", (e) =>
+          handleFile(e.target.files[0]),
+        );
+
+        ["dragenter", "dragover"].forEach((evt) => {
+          dropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add("dropzone-active");
+          });
+        });
+        ["dragleave", "drop"].forEach((evt) => {
+          dropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove("dropzone-active");
+          });
+        });
+        dropzone.addEventListener("drop", (e) => {
+          const file = e.dataTransfer.files && e.dataTransfer.files[0];
+          handleFile(file);
+        });
+
+        btnRemovePic.addEventListener("click", (e) => {
+          e.stopPropagation();
+          profilePicBase64 = "";
+          inpFile.value = "";
+          safeLSRemove(LS_CURRENT_PIC_KEY);
+          resetDropzoneUI();
+          setStatus("", false);
+          updatePreview();
+        });
+
+        // Restore a previously uploaded pic from localStorage on load (editor mode only)
+        function restorePicFromLocalStorage() {
+          const saved = safeLSGet(LS_CURRENT_PIC_KEY);
+          if (saved) {
+            profilePicBase64 = saved;
+            showDropzonePreview(
+              `data:image/jpeg;base64,${saved}`,
+              Math.round((saved.length * 0.75) / 1024),
+            );
+            setStatus("Restored from this browser", false);
+          }
+        }
+
         // ---------- Dynamic links state ----------
-        // Each link: { id, title, url }
         let links = [];
         let linkIdCounter = 0;
 
@@ -512,7 +838,6 @@
           links.push({ id, title, url });
           renderLinksEditor();
           updatePreview();
-          // focus the new title input
           requestAnimationFrame(() => {
             const row = linksList.querySelector(
               `[data-row-id="${id}"] .link-title-input`,
@@ -555,7 +880,7 @@
         </div>
         <button type="button" title="Delete link"
           class="btn-delete-link shrink-0 mt-1 w-9 h-9 rounded-lg flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
             <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
           </svg>
         </button>
@@ -582,11 +907,6 @@
         btnAddLink.addEventListener("click", () => addLinkRow());
 
         // ---------- Helpers ----------
-        function escapeHtml(str) {
-          const div = document.createElement("div");
-          div.textContent = str;
-          return div.innerHTML;
-        }
         function escapeAttr(str) {
           return String(str)
             .replace(/&/g, "&amp;")
@@ -625,52 +945,65 @@
           });
         }
 
+        // Toggle between real <img> and default silhouette icon
+        function applyProfilePic(imgEl, defaultIconEl, base64) {
+          if (base64) {
+            imgEl.src = `data:image/jpeg;base64,${base64}`;
+            imgEl.classList.remove("hidden");
+            defaultIconEl.classList.add("hidden");
+          } else {
+            imgEl.src = "";
+            imgEl.classList.add("hidden");
+            defaultIconEl.classList.remove("hidden");
+          }
+        }
+
         // ---------- Live preview updater (editor mode) ----------
         function updatePreview() {
           const name = inpName.value.trim() || "Your Name";
           const bio =
             inpBio.value.trim() ||
             "Your bio will appear here as you type it in the editor.";
-          const pic = inpPic.value.trim();
 
           prevName.textContent = name;
           prevBio.textContent = bio;
-          prevPic.src =
-            pic ||
-            `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(name)}`;
-          prevPic.onerror = () => {
-            prevPic.src = `https://api.dicebear.com/7.x/thumbs/svg?seed=fallback`;
-          };
 
+          applyProfilePic(prevPic, prevPicDefault, profilePicBase64);
           setGradient(previewBg, selectedTheme);
-
           buildLinkButtons(prevLinks, links);
         }
 
-        [inpName, inpBio, inpPic].forEach((el) => {
+        [inpName, inpBio].forEach((el) => {
           el.addEventListener("input", updatePreview);
         });
-        updatePreview();
+
+        // ---------- Base64 <-> Base64URL helpers (URL-safe, no padding) ----------
+        function toBase64Url(b64) {
+          return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        }
+        function fromBase64Url(b64url) {
+          let b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+          while (b64.length % 4) b64 += "=";
+          return b64;
+        }
 
         // ---------- URL-safe compact encode/decode for links array ----------
-        // Encodes [{title,url}] -> base64url string, and back.
         function encodeLinks(linksArr) {
           const valid = linksArr
             .filter((l) => l.title && l.url)
-            .map((l) => [l.title, l.url]); // compact tuple form
+            .map((l) => [l.title, l.url]);
           if (valid.length === 0) return "";
           const json = JSON.stringify(valid);
           const b64 = btoa(unescape(encodeURIComponent(json)));
-          // make base64 URL-safe
-          return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+          return toBase64Url(b64);
         }
 
         function decodeLinks(encoded) {
           if (!encoded) return [];
           try {
-            let b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
-            while (b64.length % 4) b64 += "=";
-            const json = decodeURIComponent(escape(atob(b64)));
+            const json = decodeURIComponent(
+              escape(atob(fromBase64Url(encoded))),
+            );
             const arr = JSON.parse(json);
             if (!Array.isArray(arr)) return [];
             return arr
@@ -685,6 +1018,17 @@
           }
         }
 
+        // ---------- Generate a short random id for this share (not the image itself) ----------
+        function generatePicId() {
+          if (window.crypto && crypto.randomUUID)
+            return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+          return (
+            "p" +
+            Date.now().toString(36) +
+            Math.random().toString(36).slice(2, 8)
+          );
+        }
+
         // ---------- Generate Link ----------
         const btnGenerate = document.getElementById("btnGenerate");
         const modalOverlay = document.getElementById("modalOverlay");
@@ -693,16 +1037,32 @@
         const btnCopyLink = document.getElementById("btnCopyLink");
         const copyFeedback = document.getElementById("copyFeedback");
         const previewLinkBtn = document.getElementById("previewLinkBtn");
+        const linkLengthNote = document.getElementById("linkLengthNote");
+        const picWarningBox = document.getElementById("picWarningBox");
 
         btnGenerate.addEventListener("click", () => {
+          // ---- Only small text data goes into the URL ----
           const params = new URLSearchParams();
           if (inpName.value.trim()) params.set("name", inpName.value.trim());
           if (inpBio.value.trim()) params.set("bio", inpBio.value.trim());
-          if (inpPic.value.trim()) params.set("pic", inpPic.value.trim());
           params.set("theme", selectedTheme);
 
           const encodedLinks = encodeLinks(links);
           if (encodedLinks) params.set("links", encodedLinks);
+
+          // ---- Image stays in localStorage; only a small reference id goes in the URL ----
+          if (profilePicBase64) {
+            const picId = generatePicId();
+            const stored = safeLSSet(LS_PIC_PREFIX + picId, profilePicBase64);
+            if (stored) {
+              params.set("picId", picId);
+              picWarningBox.classList.remove("hidden");
+            } else {
+              picWarningBox.classList.add("hidden");
+            }
+          } else {
+            picWarningBox.classList.add("hidden");
+          }
 
           const baseUrl = window.location.origin + window.location.pathname;
           const fullUrl = `${baseUrl}?${params.toString()}`;
@@ -710,6 +1070,11 @@
           generatedLinkInput.value = fullUrl;
           previewLinkBtn.href = fullUrl;
           copyFeedback.classList.add("hidden");
+
+          const len = fullUrl.length;
+          linkLengthNote.textContent = `Link length: ${len.toLocaleString()} characters — safely small since your photo isn't inside it.`;
+          linkLengthNote.className = "text-[11px] text-slate-400 mt-2";
+
           modalOverlay.classList.remove("hidden");
         });
 
@@ -733,8 +1098,7 @@
         // ---------- Viewer Mode Detection ----------
         function initViewerMode() {
           const params = new URLSearchParams(window.location.search);
-          if ([...params.keys()].length === 0) return; // stay in editor mode, show default 2 empty starter rows
-          initEditorDefaults();
+          if ([...params.keys()].length === 0) return; // stay in editor mode
 
           document.getElementById("editorMode").classList.add("hidden");
           const viewer = document.getElementById("viewerMode");
@@ -743,36 +1107,41 @@
 
           const name = params.get("name") || "Anonymous";
           const bio = params.get("bio") || "";
-          const pic =
-            params.get("pic") ||
-            `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(name)}`;
           const theme = params.get("theme") || "violet";
+          const picId = params.get("picId") || "";
           const decodedLinks = decodeLinks(params.get("links"));
 
           document.getElementById("viewName").textContent = name;
           document.getElementById("viewBio").textContent = bio;
+
           const viewPic = document.getElementById("viewPic");
-          viewPic.src = pic;
+          const viewPicDefault = document.getElementById("viewPicDefault");
+
+          // Try to read the image from THIS browser's localStorage.
+          // If it's not there (different device/browser, cleared storage, etc.),
+          // gracefully fall back to the default avatar — no errors, no broken image.
+          let picBase64 = "";
+          if (picId) {
+            picBase64 = safeLSGet(LS_PIC_PREFIX + picId) || "";
+          }
+          applyProfilePic(viewPic, viewPicDefault, picBase64);
           viewPic.onerror = () => {
-            viewPic.src = `https://api.dicebear.com/7.x/thumbs/svg?seed=fallback`;
+            applyProfilePic(viewPic, viewPicDefault, "");
           };
 
           setGradient(viewer, theme);
-
           buildLinkButtons(document.getElementById("viewLinks"), decodedLinks);
 
           document.title = `${name} — LinkFolio`;
         }
 
-        // Adds a couple of blank starter rows so the editor doesn't look empty on first load
-        function initEditorDefaults() {
-          // no-op placeholder kept for clarity/extensibility
-        }
-
-        // Kick things off: if not viewer mode, seed editor with one empty link row for convenience
+        // ---------- Boot ----------
         const initialParams = new URLSearchParams(window.location.search);
         if ([...initialParams.keys()].length === 0) {
+          // Editor mode: restore any locally-saved photo, seed one example link row, render preview
+          restorePicFromLocalStorage();
           addLinkRow("My Portfolio", "");
+          updatePreview();
         }
 
         initViewerMode();
